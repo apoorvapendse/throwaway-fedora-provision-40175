@@ -43,7 +43,9 @@ docker run -d --name fedora --privileged \
     fedora:43 sleep infinity
 docker exec fedora bash -lc '
 set -euxo pipefail
-dnf install -y --setopt=install_weak_deps=False systemd systemd-resolved dbus sudo git python3 procps-ng
+# generate-rabbitmq-cookie calls the SysV `service` helper. Fedora's
+# container image does not ship it; the initscripts package does.
+dnf install -y --setopt=install_weak_deps=False systemd systemd-resolved dbus sudo git python3 procps-ng initscripts
 useradd -m -s /bin/bash fedora || true
 echo "fedora ALL=(ALL) NOPASSWD:ALL" >/etc/sudoers.d/fedora
 chmod 440 /etc/sudoers.d/fedora
