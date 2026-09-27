@@ -75,6 +75,16 @@ git config --global --add safe.directory /home/fedora/src/zulip
 sudo -u fedora git config --global --add safe.directory /home/fedora/src/zulip
 echo "SHA $(sudo -u fedora git -C /home/fedora/src/zulip rev-parse HEAD)"
 
+# The Ubuntu runner's AppArmor profile for unix-chkpwd applies by path even
+# when the container is unconfined, so pam_unix cannot read /etc/shadow.
+# Provision only needs passwordless sudo, not a real password check.
+printf '%s\n' \
+    'auth sufficient pam_permit.so' \
+    'account sufficient pam_permit.so' \
+    'password sufficient pam_permit.so' \
+    'session sufficient pam_permit.so' \
+    >/etc/pam.d/sudo
+
 run_provision() {
     local logfile="$1"
     # corepack writes to ~/.cache. Keep that directory owned by fedora.
