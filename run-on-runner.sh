@@ -43,7 +43,7 @@ docker run -d --name fedora --privileged \
     fedora:43 sleep infinity
 docker exec fedora bash -lc '
 set -euxo pipefail
-# generate-rabbitmq-cookie calls the SysV `service` helper. Fedora's
+# generate-rabbitmq-cookie calls the SysV service helper. The Fedora
 # container image does not ship it; the initscripts package does.
 dnf install -y --setopt=install_weak_deps=False systemd systemd-resolved dbus sudo git python3 procps-ng initscripts
 useradd -m -s /bin/bash fedora || true
