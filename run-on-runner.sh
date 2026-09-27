@@ -37,7 +37,10 @@ docker pull fedora:43
 docker rm -f fedora >/dev/null 2>&1 || true
 
 # systemd is not in the Fedora container image. Install it, then boot it as PID 1.
-docker run -d --name fedora --privileged fedora:43 sleep infinity
+docker run -d --name fedora --privileged \
+    --security-opt apparmor=unconfined \
+    --security-opt seccomp=unconfined \
+    fedora:43 sleep infinity
 docker exec fedora bash -lc '
 set -euxo pipefail
 dnf install -y --setopt=install_weak_deps=False systemd systemd-resolved dbus sudo git python3 procps-ng
@@ -47,7 +50,12 @@ chmod 440 /etc/sudoers.d/fedora
 '
 docker commit fedora fedora-systemd >/dev/null
 docker rm -f fedora
+# apparmor=unconfined is required on the Ubuntu runner. The host's
+# unix-chkpwd profile otherwise denies reading the container's /etc/shadow,
+# and sudo fails with "Authentication service cannot retrieve authentication info".
 docker run -d --name fedora --privileged --cgroupns=host \
+    --security-opt apparmor=unconfined \
+    --security-opt seccomp=unconfined \
     -v /sys/fs/cgroup:/sys/fs/cgroup:rw \
     fedora-systemd /usr/lib/systemd/systemd
 sleep 5
@@ -63,7 +71,9 @@ systemctl is-system-running || true
 
 sudo -u fedora mkdir -p /home/fedora/src
 sudo -u fedora git clone --depth 1 --branch main https://github.com/zulip/zulip.git /home/fedora/src/zulip
-echo "SHA $(git -C /home/fedora/src/zulip rev-parse HEAD)"
+git config --global --add safe.directory /home/fedora/src/zulip
+sudo -u fedora git config --global --add safe.directory /home/fedora/src/zulip
+echo "SHA $(sudo -u fedora git -C /home/fedora/src/zulip rev-parse HEAD)"
 
 run_provision() {
     local logfile="$1"
