@@ -1,0 +1,25 @@
+name: fedora-provision
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+
+jobs:
+  provision:
+    runs-on: ubuntu-latest
+    timeout-minutes: 300
+    steps:
+      - name: Checkout this test harness
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+
+      - name: Run Fedora 43 x86_64 provision
+        run: bash run-on-runner.sh
+
+      - name: Upload logs
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: provision-logs
+          path: logs/
+          if-no-files-found: ignore
